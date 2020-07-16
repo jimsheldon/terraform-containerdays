@@ -11,7 +11,7 @@ trigger:
   - master
 
 volumes:
-- name: aws
+- name: dot-aws
   temp: {}
 
 steps:
@@ -25,7 +25,7 @@ steps:
 - name: aws-credentials
   image: amazon/aws-cli:2.0.31
   volumes:
-  - name: aws
+  - name: dot-aws
     path: /root/.aws
   environment:
     ASSUME_ROLE_EXTERNAL_ID:
@@ -39,13 +39,16 @@ steps:
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
 
-- name: terraform
+- name: terraform-plan
+  when:
+    event:
+    - pull_request
   image: alpine:3
   volumes:
-  - name: aws
+  - name: dot-aws
     path: /root/.aws
   environment:
-    # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
     AWS_METADATA_URL: http://localhost/not/existent/url
     # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
     AWS_SDK_LOAD_CONFIG: 1
@@ -58,3 +61,26 @@ steps:
   - tfenv use $(cat terraform.version)
   - terraform init
   - terraform plan
+
+- name: terraform-apply
+  when:
+    event:
+    - push
+  image: alpine:3
+  volumes:
+  - name: dot-aws
+    path: /root/.aws
+  environment:
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://localhost/not/existent/url
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
+    AWS_SDK_LOAD_CONFIG: 1
+  commands:
+  - apk add bash curl git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - cd dev/eu-west-1/default
+  - tfenv install $(cat terraform.version)
+  - tfenv use $(cat terraform.version)
+  - terraform init
+  - terraform apply
