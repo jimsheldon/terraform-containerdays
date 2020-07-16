@@ -48,7 +48,7 @@ steps:
     # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
     AWS_METADATA_URL: http://invalid
   commands:
-  - apk add git
+  - apk add bash git
   - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
   - ln -s /opt/tfenv/bin/* /usr/local/bin
   - cd dev/eu-west-1/default
