@@ -1,0 +1,19 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+concurrency:
+  limit: 1
+
+trigger:
+  branch:
+  - master
+
+steps:
+
+- name: files-changed
+  image: alpine:3
+  commands:
+  - apk add git
+  - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
