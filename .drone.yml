@@ -59,6 +59,7 @@ steps:
   environment:
     # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
     AWS_METADATA_URL: http://invalid
+    AWS_SDK_LOAD_CONFIG: 1
   commands:
   - apk add bash curl git
   - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
