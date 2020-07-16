@@ -20,7 +20,16 @@ steps:
   image: alpine:3
   commands:
   - apk add git
-  - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
+  - |-
+    for DIR in $(git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | sed "s/^\\(\\.\\/\\)*\\(.*\\)/\\2/" | sed "s/^\\(.*\\)\\/.*/\\1/" | sort | uniq ); do
+      for VERSION in $(find . -name terraform.version | sed "s/^\\(\\.\\/\\)*\\(.*\\)/\\2/" | sed "s/^\\(.*\\)\\/.*/\\1/" | sort | uniq); do
+        case "$DIR" in
+          "$VERSION"*)
+            echo $VERSION >> terraform_dirs
+            echo "INFO  Adding $VERSION to terrafom_dirs";;
+        esac
+      done
+    done
 
 - name: aws_credentials
   image: amazon/aws-cli:2.0.31
