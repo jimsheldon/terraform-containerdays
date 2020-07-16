@@ -62,9 +62,15 @@ steps:
   - apk add bash curl git
   - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
   - ln -s /opt/tfenv/bin/* /usr/local/bin
-  - cd dev/eu-west-1/default
-  - tfenv install $(cat terraform.version)
-  - tfenv use $(cat terraform.version)
-  - terraform init
-  - if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then terraform plan; fi
-  - if [ "$DRONE_BUILD_EVENT" == "push" ]; then terraform apply; fi
+  - |-
+    while read DIR; do
+      cd $ROOT_DIR/$DIR
+      tfenv install $(cat terraform.version)
+      tfenv use $(cat terraform.version)
+      terraform init
+      if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
+        terraform plan
+      elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
+        terraform apply
+      fi
+    done < terraform_dirs
