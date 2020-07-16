@@ -20,7 +20,16 @@ steps:
   image: alpine:3
   commands:
   - apk add git
-  - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
+  - |-
+    for DIR in $(git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | sed "s/^\\(\\.\\/\\)*\\(.*\\)/\\2/" | sed "s/^\\(.*\\)\\/.*/\\1/" | sort | uniq ); do
+      for VERSION in $(find . -name terraform.version | sed "s/^\\(\\.\\/\\)*\\(.*\\)/\\2/" | sed "s/^\\(.*\\)\\/.*/\\1/" | sort | uniq); do
+        case "$DIR" in
+          "$VERSION"*)
+            echo $VERSION >> terraform_dirs
+            echo "INFO  Adding $VERSION to terrafom_dirs";;
+        esac
+      done
+    done
 
 - name: aws_credentials
   image: amazon/aws-cli:2.0.31
@@ -53,9 +62,16 @@ steps:
   - apk add bash curl git
   - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
   - ln -s /opt/tfenv/bin/* /usr/local/bin
-  - cd dev/eu-west-1/default
-  - tfenv install $(cat terraform.version)
-  - tfenv use $(cat terraform.version)
-  - terraform init
-  - if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then terraform plan; fi
-  - if [ "$DRONE_BUILD_EVENT" == "push" ]; then terraform apply; fi
+  - |-
+    ROOT_DIR=$(pwd)
+    while read DIR; do
+      cd $ROOT_DIR/$DIR
+      tfenv install $(cat terraform.version)
+      tfenv use $(cat terraform.version)
+      terraform init
+      if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
+        terraform plan
+      elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
+        terraform apply
+      fi
+    done < $ROOT_DIR/terraform_dirs
