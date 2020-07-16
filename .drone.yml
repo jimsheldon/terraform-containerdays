@@ -38,18 +38,6 @@ steps:
   - aws configure set credential_source Ec2InstanceMetadata
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
-  - aws s3 ls
-
-- name: aws-credentials2
-  image: amazon/aws-cli:2.0.31
-  volumes:
-  - name: aws
-    path: /root/.aws
-  commands:
-  - aws sts get-caller-identity
-  - aws s3 ls
-  - ls ~/.aws
-  - cat ~/.aws/config
 
 - name: terraform
   image: alpine:3
@@ -57,8 +45,7 @@ steps:
   - name: aws
     path: /root/.aws
   environment:
-    # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
-    AWS_METADATA_URL: http://invalid
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
     AWS_SDK_LOAD_CONFIG: 1
   commands:
   - apk add bash curl git
@@ -67,5 +54,5 @@ steps:
   - cd dev/eu-west-1/default
   - tfenv install $(cat terraform.version)
   - tfenv use $(cat terraform.version)
-  - export AWS_METADATA_URL="http://localhost/not/existent/url" && terraform init
+  - terraform init
   - terraform plan
