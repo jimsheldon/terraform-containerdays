@@ -17,3 +17,17 @@ steps:
   commands:
   - apk add git
   - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
+
+- name: terraform
+  image: amazon/aws-cli:2.0.31
+  environment:
+    ASSUME_ROLE_EXTERNAL_ID:
+      from_secret: assume_role_external_id
+    DEMO_ACCOUNT_ID:
+      from_secret: demo_account_id
+  commands:
+  - aws configure set role_arn "arn:aws:iam::${DEMO_ACCOUNT_ID}:role/DroneTerraformContainerDays"
+  - aws configure set region eu-west-1
+  - aws configure set credential_source Ec2InstanceMetadata
+  - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
+  - aws sts get-caller-identity
