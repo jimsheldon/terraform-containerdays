@@ -38,6 +38,7 @@ steps:
   - aws configure set credential_source Ec2InstanceMetadata
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
+  - aws s3 ls
 
 - name: terraform
   image: alpine:3
@@ -54,5 +55,5 @@ steps:
   - cd dev/eu-west-1/default
   - tfenv install $(cat terraform.version)
   - tfenv use $(cat terraform.version)
-  - terraform init
+  - export AWS_METADATA_URL="http://localhost/not/existent/url" && terraform init
   - terraform plan
