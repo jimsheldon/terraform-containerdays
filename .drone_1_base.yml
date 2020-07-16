@@ -14,23 +14,6 @@ volumes:
 - name: dot-aws
   temp: {}
 
-# anchors
-
-environment: &terraform-environment
-  # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
-  AWS_METADATA_URL: http://localhost/not/existent/url
-  # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
-  AWS_SDK_LOAD_CONFIG: 1
-
-commands: &terraform-commands
-  - apk add bash curl git
-  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
-  - ln -s /opt/tfenv/bin/* /usr/local/bin
-  - cd dev/eu-west-1/default
-  - tfenv install $(cat terraform.version)
-  - tfenv use $(cat terraform.version)
-  - terraform init
-
 steps:
 
 - name: files-changed
@@ -64,8 +47,19 @@ steps:
   volumes:
   - name: dot-aws
     path: /root/.aws
-  <<: *terraform-environment
-  <<: *terraform-commands
+  environment:
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://localhost/not/existent/url
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
+    AWS_SDK_LOAD_CONFIG: 1
+  commands:
+  - apk add bash curl git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - cd dev/eu-west-1/default
+  - tfenv install $(cat terraform.version)
+  - tfenv use $(cat terraform.version)
+  - terraform init
   - terraform plan
 
 - name: terraform-apply
@@ -76,6 +70,17 @@ steps:
   volumes:
   - name: dot-aws
     path: /root/.aws
-  <<: *terraform-environment
-  <<: *terraform-commands
+  environment:
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://localhost/not/existent/url
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
+    AWS_SDK_LOAD_CONFIG: 1
+  commands:
+  - apk add bash curl git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - cd dev/eu-west-1/default
+  - tfenv install $(cat terraform.version)
+  - tfenv use $(cat terraform.version)
+  - terraform init
   - terraform apply
