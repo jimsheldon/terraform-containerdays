@@ -39,7 +39,7 @@ steps:
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
 
-- name: terraform_${DRONE_BUILD_EVENT}
+- name: terraform
   image: alpine:3
   volumes:
   - name: dot-aws
