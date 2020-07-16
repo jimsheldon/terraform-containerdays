@@ -58,3 +58,4 @@ steps:
   - tfenv use $(cat terraform.version)
   - terraform init
   - terraform plan
+  - if [ "$DRONE_PULL_REQUEST" == "" ]; then terraform apply; fi
