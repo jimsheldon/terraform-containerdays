@@ -48,6 +48,8 @@ steps:
   commands:
   - aws sts get-caller-identity
   - aws s3 ls
+  - ls ~/.aws
+  - cat ~/.aws/config
 
 - name: terraform
   image: alpine:3
