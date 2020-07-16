@@ -10,6 +10,10 @@ trigger:
   branch:
   - master
 
+volumes:
+- name: aws
+  temp: {}
+
 steps:
 
 - name: files-changed
@@ -18,16 +22,29 @@ steps:
   - apk add git
   - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
 
-- name: terraform
+- name: aws-cli
   image: amazon/aws-cli:2.0.31
+  volumes:
+  - name: aws
+    path: /root/.aws
   environment:
     ASSUME_ROLE_EXTERNAL_ID:
       from_secret: assume_role_external_id
     DEMO_ACCOUNT_ID:
       from_secret: demo_account_id
   commands:
-  - aws configure set role_arn "arn:aws:iam::$DEMO_ACCOUNT_ID:role/DroneTerraformContainerDays"
-  - aws configure set region eu-west-1
-  - aws configure set credential_source Ec2InstanceMetadata
-  - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
+  - aws configure --profile demo set role_arn "arn:aws:iam::$DEMO_ACCOUNT_ID:role/DroneTerraformContainerDays"
+  - aws configure --profile demo set region eu-west-1
+  - aws configure --profile demo set credential_source Ec2InstanceMetadata
+  - aws configure --profile demo set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
+
+- name: terraform
+  image: alpine:3
+  volumes:
+  - name: aws
+    path: /root/.aws
+  commands:
+  - ls -a /root
+  - ls /root/.aws
+  - apk add git
