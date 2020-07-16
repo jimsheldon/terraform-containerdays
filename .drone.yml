@@ -40,9 +40,6 @@ steps:
   - aws sts get-caller-identity
 
 - name: terraform_${DRONE_BUILD_EVENT}
-  when:
-    event:
-    - pull_request
   image: alpine:3
   volumes:
   - name: dot-aws
