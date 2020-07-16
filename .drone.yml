@@ -45,6 +45,8 @@ steps:
   - name: aws
     path: /root/.aws
   environment:
+    # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://localhost/not/existent/url
     # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
     AWS_SDK_LOAD_CONFIG: 1
   commands:

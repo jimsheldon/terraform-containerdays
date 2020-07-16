@@ -3,7 +3,8 @@ terraform {
     bucket = "terraform-state-jimcontainerdays-demo"
     key    = "eu-west-1/default.tfstate"
     region = "eu-west-1"
-//    skip_metadata_api_check = true
+    // workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    skip_metadata_api_check = true
   }
 }
 
