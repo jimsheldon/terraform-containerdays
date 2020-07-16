@@ -98,7 +98,7 @@ steps:
 # prod
 
 - <<: *aws_credentials
-  name: dev_aws_credentials
+  name: prod_aws_credentials
   when:
     paths:
       include:
@@ -111,7 +111,7 @@ steps:
     TF_ENV: prod
 
 - <<: *terraform
-  name: dev_terraform_${DRONE_BUILD_EVENT}
+  name: prod_terraform_${DRONE_BUILD_EVENT}
   when:
     paths:
       include:
