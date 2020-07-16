@@ -22,7 +22,7 @@ steps:
   - apk add git
   - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
 
-- name: aws-cli
+- name: aws-credentials
   image: amazon/aws-cli:2.0.31
   volumes:
   - name: aws
@@ -30,13 +30,13 @@ steps:
   environment:
     ASSUME_ROLE_EXTERNAL_ID:
       from_secret: assume_role_external_id
-    DEMO_ACCOUNT_ID:
+    AWS_ACCOUNT_ID:
       from_secret: demo_account_id
   commands:
-  - aws configure --profile demo set role_arn "arn:aws:iam::$DEMO_ACCOUNT_ID:role/DroneTerraformContainerDays"
-  - aws configure --profile demo set region eu-west-1
-  - aws configure --profile demo set credential_source Ec2InstanceMetadata
-  - aws configure --profile demo set external_id $ASSUME_ROLE_EXTERNAL_ID
+  - aws configure set role_arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/DroneTerraformContainerDays"
+  - aws configure set region eu-west-1
+  - aws configure set credential_source Ec2InstanceMetadata
+  - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
 
 - name: terraform
@@ -44,7 +44,15 @@ steps:
   volumes:
   - name: aws
     path: /root/.aws
+  environment:
+    # workaround for aws provider bug https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://invalid
   commands:
-  - ls -a /root
-  - ls /root/.aws
   - apk add git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - cd dev/eu-west-1/default
+  - tfenv install $(cat terraform.version)
+  - tfenv use $(cat terraform.version)
+  - terraform init
+  - terraform plan
