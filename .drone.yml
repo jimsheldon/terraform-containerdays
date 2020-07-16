@@ -26,7 +26,7 @@ steps:
     DEMO_ACCOUNT_ID:
       from_secret: demo_account_id
   commands:
-  - aws configure set role_arn "arn:aws:iam::${DEMO_ACCOUNT_ID}:role/DroneTerraformContainerDays"
+  - aws configure set role_arn "arn:aws:iam::$DEMO_ACCOUNT_ID:role/DroneTerraformContainerDays"
   - aws configure set region eu-west-1
   - aws configure set credential_source Ec2InstanceMetadata
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
