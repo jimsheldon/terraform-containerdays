@@ -16,13 +16,13 @@ volumes:
 
 steps:
 
-- name: files_changed
+- name: files-changed
   image: alpine:3
   commands:
   - apk add git
   - git --no-pager diff --name-only $DRONE_COMMIT_BEFORE..$DRONE_COMMIT_AFTER | tee files-changed
 
-- name: aws_credentials
+- name: aws-credentials
   image: amazon/aws-cli:2.0.31
   volumes:
   - name: dot-aws
@@ -39,7 +39,7 @@ steps:
   - aws configure set external_id $ASSUME_ROLE_EXTERNAL_ID
   - aws sts get-caller-identity
 
-- name: terraform
+- name: terraform-plan
   image: alpine:3
   volumes:
   - name: dot-aws
@@ -58,4 +58,3 @@ steps:
   - tfenv use $(cat terraform.version)
   - terraform init
   - terraform plan
-  - [ -z "$DRONE_PULL_REQUEST" ] && terraform apply -auto-approve
