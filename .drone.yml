@@ -57,5 +57,5 @@ steps:
   - tfenv install $(cat terraform.version)
   - tfenv use $(cat terraform.version)
   - terraform init
-  - terraform plan
-  - if [ "$DRONE_PULL_REQUEST" == "" ]; then terraform apply; fi
+  - if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then terraform plan; fi
+  - if [ "$DRONE_BUILD_EVENT" == "push" ]; then terraform apply; fi
