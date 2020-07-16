@@ -40,6 +40,15 @@ steps:
   - aws sts get-caller-identity
   - aws s3 ls
 
+- name: aws-credentials2
+  image: amazon/aws-cli:2.0.31
+  volumes:
+  - name: aws
+    path: /root/.aws
+  commands:
+  - aws sts get-caller-identity
+  - aws s3 ls
+
 - name: terraform
   image: alpine:3
   volumes:
