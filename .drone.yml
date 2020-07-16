@@ -63,6 +63,7 @@ steps:
   - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
   - ln -s /opt/tfenv/bin/* /usr/local/bin
   - |-
+    ROOT_DIR=$(pwd)
     while read DIR; do
       cd $ROOT_DIR/$DIR
       tfenv install $(cat terraform.version)
@@ -73,4 +74,4 @@ steps:
       elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
         terraform apply
       fi
-    done < terraform_dirs
+    done < $ROOT_DIR/terraform_dirs
