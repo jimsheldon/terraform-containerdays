@@ -45,7 +45,7 @@ terraform: &terraform
       if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
         terraform plan
       elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
-        terraform apply
+        terraform apply -auto-approve
       fi
     done
 
