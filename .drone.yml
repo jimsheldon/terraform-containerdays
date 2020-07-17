@@ -36,7 +36,7 @@ terraform: &terraform
   - ln -s /opt/tfenv/bin/* /usr/local/bin
   - |-
     ROOT_DIR=$(pwd)
-    for DIR in $(cat terraform_dirs | grep ^dev); do
+    for DIR in $(cat terraform_dirs | grep ^$TF_ENV); do
       cd $ROOT_DIR/$DIR
       tfenv install $(cat terraform.version)
       tfenv use $(cat terraform.version)
@@ -99,6 +99,7 @@ steps:
     AWS_METADATA_URL: http://localhost/not/existent/url
     AWS_SDK_LOAD_CONFIG: 1
     AWS_PROFILE: dev-eu-west-1
+    TF_ENV: dev
   when:
     paths:
       include:
@@ -110,6 +111,7 @@ steps:
     AWS_METADATA_URL: http://localhost/not/existent/url
     AWS_SDK_LOAD_CONFIG: 1
     AWS_PROFILE: prod-eu-west-1
+    TF_ENV: prod
   when:
     paths:
       include:
