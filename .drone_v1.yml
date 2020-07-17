@@ -64,7 +64,8 @@ steps:
   - ln -s /opt/tfenv/bin/* /usr/local/bin
   - |-
     ROOT_DIR=$(pwd)
-    while read DIR; do
+    for DIR in $(cat terraform_dirs); do
+      echo "INFO  Changing to $DIR"
       cd $ROOT_DIR/$DIR
       tfenv install $(cat terraform.version)
       tfenv use $(cat terraform.version)
@@ -74,4 +75,4 @@ steps:
       elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
         terraform apply
       fi
-    done < $ROOT_DIR/terraform_dirs
+    done
