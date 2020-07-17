@@ -65,6 +65,7 @@ steps:
   - |-
     ROOT_DIR=$(pwd)
     for DIR in $(cat terraform_dirs); do
+      echo "INFO  Changing to $DIR"
       cd $ROOT_DIR/$DIR
       tfenv install $(cat terraform.version)
       tfenv use $(cat terraform.version)
