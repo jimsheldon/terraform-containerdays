@@ -14,6 +14,9 @@ volumes:
 - name: dot-aws
   temp: {}
 
+image: &image
+  image: amazon/aws-cli:2.0.31
+
 steps:
 
 - name: files_changed
@@ -31,8 +34,8 @@ steps:
       done
     done
 
-- name: dev_aws_credentials
-  image: amazon/aws-cli:2.0.31
+- <<: *image
+  name: dev_aws_credentials
   volumes:
   - name: dot-aws
     path: /root/.aws
@@ -51,8 +54,8 @@ steps:
   - aws configure --profile dev set credential_source Ec2InstanceMetadata
   - aws configure --profile dev set external_id $ASSUME_ROLE_EXTERNAL_ID
 
-- name: prod_aws_credentials
-  image: amazon/aws-cli:2.0.31
+- <<: *image
+  name: prod_aws_credentials
   volumes:
   - name: dot-aws
     path: /root/.aws
