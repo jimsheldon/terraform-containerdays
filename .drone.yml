@@ -14,43 +14,6 @@ volumes:
 - name: dot-aws
   temp: {}
 
-# anchors
-
-aws_credentials: &aws_credentials
-  image: amazon/aws-cli:2.0.31
-  volumes:
-  - name: dot-aws
-    path: /root/.aws
-  commands:
-  - aws configure --profile $TF_ENV set role_arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/DroneTerraformContainerDays"
-  - aws configure --profile $TF_ENV set region eu-west-1
-  - aws configure --profile $TF_ENV set credential_source Ec2InstanceMetadata
-  - aws configure --profile $TF_ENV set external_id $ASSUME_ROLE_EXTERNAL_ID
-  - aws sts get-caller-identity
-
-terraform: &terraform
-  image: alpine:3
-  volumes:
-  - name: dot-aws
-    path: /root/.aws
-  commands:
-  - apk add bash curl git
-  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
-  - ln -s /opt/tfenv/bin/* /usr/local/bin
-  - |-
-    ROOT_DIR=$(pwd)
-    while read DIR; do
-      cd $ROOT_DIR/$DIR
-      tfenv install $(cat terraform.version)
-      tfenv use $(cat terraform.version)
-      terraform init
-      if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
-        terraform plan
-      elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
-        terraform apply
-      fi
-    done < <(grep ^$TF_ENV terraform_dirs)
-
 steps:
 
 - name: files_changed
@@ -68,56 +31,100 @@ steps:
       done
     done
 
-# dev
-
-- <<: *aws_credentials
-  name: dev_aws_credentials
-  when:
-    paths:
-      include:
-      - dev/**
+- name: dev_aws_credentials
+  image: amazon/aws-cli:2.0.31
+  volumes:
+  - name: dot-aws
+    path: /root/.aws
   environment:
     ASSUME_ROLE_EXTERNAL_ID:
       from_secret: assume_role_external_id
     AWS_ACCOUNT_ID:
       from_secret: demo_account_id
-    TF_ENV: dev
-
-- <<: *terraform
-  name: dev_terraform_${DRONE_BUILD_EVENT}
+  commands:
+  - aws configure --profile dev set role_arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/DroneTerraformContainerDays"
+  - aws configure --profile dev set region eu-west-1
+  - aws configure --profile dev set credential_source Ec2InstanceMetadata
+  - aws configure --profile dev set external_id $ASSUME_ROLE_EXTERNAL_ID
   when:
     paths:
       include:
       - dev/**
-  environment:
-    AWS_METADATA_URL: http://localhost/not/existent/url
-    AWS_PROFILE: dev
-    AWS_SDK_LOAD_CONFIG: 1
-    TF_ENV: dev
 
-# prod
-
-- <<: *aws_credentials
-  name: prod_aws_credentials
-  when:
-    paths:
-      include:
-      - prod/**
+- name: prod_aws_credentials
+  image: amazon/aws-cli:2.0.31
+  volumes:
+  - name: dot-aws
+    path: /root/.aws
   environment:
     ASSUME_ROLE_EXTERNAL_ID:
       from_secret: assume_role_external_id
     AWS_ACCOUNT_ID:
       from_secret: prod_account_id
-    TF_ENV: prod
-
-- <<: *terraform
-  name: prod_terraform_${DRONE_BUILD_EVENT}
+  commands:
+  - aws configure --profile prod set role_arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/DroneTerraformContainerDays"
+  - aws configure --profile prod set region eu-west-1
+  - aws configure --profile prod set credential_source Ec2InstanceMetadata
+  - aws configure --profile prod set external_id $ASSUME_ROLE_EXTERNAL_ID
   when:
     paths:
       include:
       - prod/**
+
+- name: dev_terraform_${DRONE_BUILD_EVENT}
+  image: alpine:3
+  volumes:
+  - name: dot-aws
+    path: /root/.aws
   environment:
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
     AWS_METADATA_URL: http://localhost/not/existent/url
-    AWS_PROFILE: prod
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
     AWS_SDK_LOAD_CONFIG: 1
-    TF_ENV: prod
+    AWS_PROFILE: dev
+  commands:
+  - apk add bash curl git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - |-
+    ROOT_DIR=$(pwd)
+    for DIR in $(cat terraform_dirs | grep ^dev); do
+      cd $ROOT_DIR/$DIR
+      tfenv install $(cat terraform.version)
+      tfenv use $(cat terraform.version)
+      terraform init
+      if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
+        terraform plan
+      elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
+        terraform apply
+      fi
+    done
+
+- name: prod_terraform_${DRONE_BUILD_EVENT}
+  image: alpine:3
+  volumes:
+  - name: dot-aws
+    path: /root/.aws
+  environment:
+    # workaround for https://github.com/terraform-providers/terraform-provider-aws/issues/5018
+    AWS_METADATA_URL: http://localhost/not/existent/url
+    # workaround for https://github.com/hashicorp/aws-sdk-go-base/issues/7
+    AWS_SDK_LOAD_CONFIG: 1
+    AWS_PROFILE: prod
+  commands:
+  - apk add bash curl git
+  - git clone --branch v1.0.2 https://github.com/tfutils/tfenv.git /opt/tfenv
+  - ln -s /opt/tfenv/bin/* /usr/local/bin
+  - |-
+    ROOT_DIR=$(pwd)
+    for DIR in $(cat terraform_dirs | grep ^prod); do
+      cd $ROOT_DIR/$DIR
+      tfenv install $(cat terraform.version)
+      tfenv use $(cat terraform.version)
+      terraform init
+      if [ "$DRONE_BUILD_EVENT" == "pull_request" ]; then
+        terraform plan
+      elif [ "$DRONE_BUILD_EVENT" == "push" ]; then
+        terraform apply
+      fi
+    done
