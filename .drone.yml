@@ -1,4 +1,12 @@
 ---
+
+# this pipeline would handle dev and prod running separate AWS accounts,
+# running infrastructure in multiple regions (would require adding steps for
+# those regions)
+#
+# this pipeline also makes use of this drone extension:
+# https://github.com/meltwater/drone-convert-pathschanged
+
 kind: pipeline
 type: docker
 name: default

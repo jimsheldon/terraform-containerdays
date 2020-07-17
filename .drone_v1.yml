@@ -1,4 +1,8 @@
 ---
+
+# this pipeline would handle running dev and prod infrastructure in a single
+# AWS account, with a single AWS region, with a single IAM role
+
 kind: pipeline
 type: docker
 name: default
